@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Day Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 5px 10px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
+        .btn-disabled { background-color: #ccc; pointer-events: none; }
+        .messages { padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+
+    <h1>Service Day Opportunities</h1>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        <p>Welcome, <strong>{{ user.username }}</strong>! <a href="/admin/logout/">Logout</a></p>
+    {% else %}
+        <p>You are viewing as a guest. <a href="/admin/login/?next=/">Login to Register</a></p>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Activity</th>
+                <th>Location</th>
+                <th>Date & Time</th>
+                <th>Slots Available</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ngo in ngos %}
+            <tr>
+                <td><strong>{{ ngo.name }}</strong><br><small>{{ ngo.description }}</small></td>
+                <td>{{ ngo.location }}</td>
+                <td>{{ ngo.event_date }} <br> {{ ngo.start_time }}</td>
+                
+                <td>{{ ngo.seats_available }} / {{ ngo.max_employees }}</td>
+                
+                <td>
+                    {% if user.is_authenticated %}
+                        {% if ngo.id in user_registered_ids %}
+                            <span class="btn btn-disabled">Registered</span>
+                        {% elif ngo.seats_available == 0 %}
+                            <span class="btn btn-disabled">Full</span>
+                        {% else %}
+                            <a href="{% url 'register_ngo' ngo.id %}" class="btn">Register</a>
+                        {% endif %}
+                    {% else %}
+                        <span>Login to Join</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No opportunities available yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
