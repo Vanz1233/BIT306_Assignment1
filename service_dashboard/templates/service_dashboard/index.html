@@ -1,73 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Day Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .btn { padding: 5px 10px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
-        .btn-disabled { background-color: #ccc; pointer-events: none; }
-        .messages { padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card-table { border: none; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .table thead th { background-color: #2c3e50; color: white; font-weight: 500; text-transform: uppercase; font-size: 0.85rem; padding: 15px; }
+        .table tbody td { vertical-align: middle; padding: 15px; border-bottom: 1px solid #eee; }
+        .cutoff-badge { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
     </style>
 </head>
 <body>
 
-    <h1>Service Day Opportunities</h1>
-
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                {{ message }}
-            {% endfor %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">CSR Connect</a>
+            <div class="d-flex align-items-center text-white">
+                {% if user.is_authenticated %}
+                    <span class="me-3">Welcome, <strong>{{ user.username }}</strong></span>
+                    <form action="{% url 'logout' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-sm">Staff Login</a>
+                {% endif %}
+            </div>
         </div>
-    {% endif %}
+    </nav>
 
-    {% if user.is_authenticated %}
-        <p>Welcome, <strong>{{ user.username }}</strong>! <a href="/admin/logout/">Logout</a></p>
-    {% else %}
-        <p>You are viewing as a guest. <a href="/admin/login/?next=/">Login to Register</a></p>
-    {% endif %}
-
-    <table>
-        <thead>
-            <tr>
-                <th>Activity</th>
-                <th>Location</th>
-                <th>Date & Time</th>
-                <th>Slots Available</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for ngo in ngos %}
-            <tr>
-                <td><strong>{{ ngo.name }}</strong><br><small>{{ ngo.description }}</small></td>
-                <td>{{ ngo.location }}</td>
-                <td>{{ ngo.event_date }} <br> {{ ngo.start_time }}</td>
-                
-                <td>{{ ngo.seats_available }} / {{ ngo.max_employees }}</td>
-                
-                <td>
-                    {% if user.is_authenticated %}
-                        {% if ngo.id in user_registered_ids %}
-                            <span class="btn btn-disabled">Registered</span>
-                        {% elif ngo.seats_available == 0 %}
-                            <span class="btn btn-disabled">Full</span>
-                        {% else %}
-                            <a href="{% url 'register_ngo' ngo.id %}" class="btn">Register</a>
-                        {% endif %}
-                    {% else %}
-                        <span>Login to Join</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5">No opportunities available yet.</td></tr>
+    <div class="container pb-5">
+        <div class="row align-items-center mb-4">
+            <div class="col">
+                <h2 class="fw-bold text-dark mb-1">Service Day Opportunities</h2>
+                <p class="text-muted mb-0">Browse and register for upcoming CSR activities.</p>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-primary rounded-pill px-3 py-2">{{ ngos|length }} Activities Found</span>
+            </div>
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        {% endif %}
+
+        <div class="card card-table bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Activity</th>
+                            <th style="width: 15%;">Location</th>
+                            <th style="width: 25%;">Schedule</th>
+                            <th style="width: 10%;">Slots</th>
+                            <th style="width: 15%; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ngo in ngos %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ ngo.name }}</div>
+                                <div class="text-muted small">{{ ngo.description|truncatewords:15 }}</div>
+                            </td>
+                            <td>{{ ngo.location }}</td>
+                            <td>
+                                <div>{{ ngo.event_date }}</div>
+                                <span class="badge bg-light text-danger border border-danger mt-1 cutoff-badge">
+                                    Cutoff: {{ ngo.cutoff_date|date:"M d, H:i" }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if ngo.seats_available > 0 %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill">
+                                        {{ ngo.seats_available }} / {{ ngo.max_employees }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">FULL</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if user.is_authenticated %}
+                                    {% if now > ngo.cutoff_date %}
+                                        <button class="btn btn-secondary btn-sm w-100" disabled>Closed</button>
+                                    {% elif ngo.id in user_registered_ids %}
+                                        <a href="{% url 'cancel_ngo' ngo.id %}" class="btn btn-outline-danger btn-sm w-100">Withdraw</a>
+                                    {% elif ngo.seats_available == 0 %}
+                                        <button class="btn btn-light text-muted btn-sm w-100 border" disabled>Waitlist</button>
+                                    {% else %}
+                                        <a href="{% url 'register_ngo' ngo.id %}" class="btn btn-success btn-sm w-100 shadow-sm">Register</a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'login' %}" class="btn btn-link btn-sm text-decoration-none">Login</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <h4 class="text-muted">No activities available</h4>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
+
