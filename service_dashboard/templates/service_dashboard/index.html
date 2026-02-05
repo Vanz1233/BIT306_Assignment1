@@ -93,7 +93,10 @@
                                     {% if now > ngo.cutoff_date %}
                                         <button class="btn btn-secondary btn-sm w-100" disabled>Closed</button>
                                     {% elif ngo.id in user_registered_ids %}
-                                        <a href="{% url 'cancel_ngo' ngo.id %}" class="btn btn-outline-danger btn-sm w-100">Withdraw</a>
+                                        <form action="{% url 'cancel_ngo' ngo.id %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Withdraw</button>
+                                        </form>
                                     {% elif ngo.seats_available == 0 %}
                                         <button class="btn btn-light text-muted btn-sm w-100 border" disabled>Waitlist</button>
                                     {% else %}

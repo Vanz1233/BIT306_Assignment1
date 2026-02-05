@@ -1,8 +1,10 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils import timezone  # Needed for checking dates
+from django.utils import timezone
 from .models import NGO, Registration
+from .services import EventService  # <--- IMPORT THE NEW SERVICE
+from django.views.decorators.http import require_POST
 
 def dashboard(request):
     ngos = NGO.objects.all()
@@ -13,40 +15,42 @@ def dashboard(request):
     return render(request, 'service_dashboard/index.html', {
         'ngos': ngos,
         'user_registered_ids': user_registered_ids,
-        'now': timezone.now() # Pass current time to template
+        'now': timezone.now()
     })
 
 @login_required
 def register_ngo(request, ngo_id):
-    ngo = get_object_or_404(NGO, id=ngo_id)
+    # Delegate logic to the Service Layer (Topic 2.3 - Loose Coupling)
+    success, message = EventService.register_employee(request.user, ngo_id)
     
-    # Requirement: Check Cut-off Date
-    if timezone.now() > ngo.cutoff_date:
-        messages.error(request, "Registration for this event has closed.")
-        return redirect('dashboard')
-
-    if Registration.objects.filter(employee=request.user, ngo=ngo).exists():
-        messages.warning(request, f"You are already registered for {ngo.name}.")
-    elif ngo.seats_available() <= 0:
-        messages.error(request, f"Sorry, {ngo.name} is full.")
+    if success:
+        messages.success(request, message)
     else:
-        Registration.objects.create(employee=request.user, ngo=ngo)
-        messages.success(request, f"Successfully registered for {ngo.name}!")
+        messages.error(request, message)
         
     return redirect('dashboard')
 
 @login_required
 def cancel_ngo(request, ngo_id):
-    ngo = get_object_or_404(NGO, id=ngo_id)
-    registration = Registration.objects.filter(employee=request.user, ngo=ngo).first()
-
-    # Requirement: Check Cut-off Date for cancellation too
-    if timezone.now() > ngo.cutoff_date:
-        messages.error(request, "It is too late to cancel your registration.")
-    elif registration:
-        registration.delete()
-        messages.success(request, f"You have withdrawn from {ngo.name}.")
+    # Delegate logic to the Service Layer
+    success, message = EventService.withdraw_employee(request.user, ngo_id)
+    
+    if success:
+        messages.success(request, message)
     else:
-        messages.error(request, "You are not registered for this event.")
+        messages.error(request, message)
+        
+    return redirect('dashboard')
+
+@require_POST  # <--- Add this decorator
+@login_required
+def cancel_ngo(request, ngo_id):
+    # Delegate logic to the Service Layer
+    success, message = EventService.withdraw_employee(request.user, ngo_id)
+    
+    if success:
+        messages.success(request, message)
+    else:
+        messages.error(request, message)
         
     return redirect('dashboard')
