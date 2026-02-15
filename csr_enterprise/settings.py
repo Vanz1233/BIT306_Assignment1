@@ -38,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'service_dashboard',
+    'events',
+    'accounts',
+    'notifications',
+    'jazzmin',
 ]
 
 MIDDLEWARE = [

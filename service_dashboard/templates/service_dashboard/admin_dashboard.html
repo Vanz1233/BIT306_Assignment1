@@ -1,0 +1,134 @@
+{% extends 'service_dashboard/admin_base.html' %}
+
+{% block admin_content %}
+    
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2 fw-bold text-dark">System Overview</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary">Export Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Staff</h6>
+                        <h2 class="mb-0 fw-bold">{{ total_users }}</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                        👥
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted small fw-bold text-uppercase mb-1">Active Events</h6>
+                        <h2 class="mb-0 fw-bold">{{ active_events }}</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                        🌱
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Activities</h6>
+                        <h2 class="mb-0 fw-bold">{{ total_events }}</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                        📅
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">📊 Engagement Trends</h5>
+            
+        </div>
+        <div class="card-body">
+            <div class="w-75 mx-auto">
+                <canvas id="dashboardChart" height="80"></canvas>
+            </div>
+        </div>
+
+    </div>
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Recent Opportunities</h5>
+            <a href="/admin/service_dashboard/ngo/add/" class="btn btn-sm btn-primary">+ New Event</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Event</th>
+                        <th>Date</th>
+                        <th>Availability</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in upcoming_events %}
+                    <tr>
+                        <td class="fw-bold">{{ event.name }}</td>
+                        <td>{{ event.event_date|date:"d M Y" }}</td>
+                        <td>
+                            <span class="badge rounded-pill {% if event.seats_available > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ event.seats_available }} slots
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-dark" title="View QR Code">
+                                🔳 QR
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">No events found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Sign-ups',
+                    data: [5, 12, 19, 8],
+                    borderColor: '#0d6efd',
+                    tension: 0.3,
+                    fill: true,
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+{% endblock %}
+
