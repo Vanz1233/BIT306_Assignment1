@@ -20,6 +20,10 @@ class NGO(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        verbose_name = 'NGO Event'          
+        verbose_name_plural = 'NGO Events'  
 
 class Registration(models.Model):
     employee = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -32,3 +36,5 @@ class Registration(models.Model):
 
     def __str__(self):
         return f"{self.employee.username} - {self.ngo.name}"
+    
+

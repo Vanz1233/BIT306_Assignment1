@@ -122,7 +122,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Redirect to the homepage (Dashboard) after login
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'smart_redirect'
 
 # Redirect to the homepage after logout
 LOGOUT_REDIRECT_URL = '/'
@@ -139,3 +139,59 @@ MIDDLEWARE = [
     # Add your custom middleware here:
     'service_dashboard.middleware.RequestLogMiddleware',  # <--- NEW LINE
 ]
+
+JAZZMIN_SETTINGS = {
+    "site_title": "CSR Admin",
+    "site_header": "CSR Connect",
+    "site_brand": "CSR Management",
+    
+    # Add your custom views to the sidebar
+    "custom_links": {
+        # The "" means these links will appear at the very top level of the menu
+        "": [
+            {
+                "name": "📸 Scan Ticket", 
+                "url": "scanner_prototype", # Matches your urls.py name
+                "permissions": ["auth.view_user"]
+            },
+            {
+                "name": "📢 Broadcasts", 
+                "url": "notifications", # Matches your urls.py name
+                "permissions": ["auth.view_user"]
+            }
+        ]
+    },
+    
+    # Optional: Tweak the UI theme 
+    "theme": "flatly",
+}
+
+JAZZMIN_SETTINGS = {
+    "site_title": "CSR Admin",
+    "site_header": "CSR Connect",
+    "site_brand": "CSR Management",
+    
+    # This injects your custom views into the Jazzmin sidebar
+    "custom_links": {
+        "service_dashboard": [
+            {
+                "name": "📊 Dashboard Stats", 
+                "url": "admin_dashboard", 
+                "icon": "fas fa-chart-line",
+            },
+            {
+                "name": "📸 Scan Ticket (Beta)", 
+                "url": "scanner_prototype", 
+                "icon": "fas fa-camera",
+            },
+            {
+                "name": "📢 Broadcasts", 
+                "url": "notifications", 
+                "icon": "fas fa-bullhorn",
+            }
+        ]
+    },
+    
+    # Optional: Makes the UI look a bit more modern
+    "theme": "litera", 
+}

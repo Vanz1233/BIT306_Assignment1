@@ -4,10 +4,6 @@ from . import views
 urlpatterns = [
     # Landing Page
     path('', views.dashboard, name='dashboard'),
-    
-    path('notifications/', views.notifications_view, name='notifications'),
-
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 
     path('admin-dashboard/scanner/', views.scanner_prototype, name='scanner_prototype'),
     

@@ -1,11 +1,12 @@
-from django.shortcuts import render, get_object_or_404, redirect  # Added redirect
+from django.shortcuts import render, get_object_or_404, redirect  
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from .models import NGO, Registration
 from django.contrib.auth.models import User
 from django.db.models import Count, F
-from django.contrib import messages  # Added messages framework
-from .services import EventService   # Your new Service Layer
+from django.contrib import messages, admin  
+from .services import EventService   
+from django.urls import reverse
 
 # --- Helper Check ---
 def is_admin(user):
@@ -30,19 +31,21 @@ def dashboard(request):
         'now': timezone.now()
     })
 
-@login_required
-def notifications_view(request):
-    return render(request, 'service_dashboard/notifications.html')
-
 # --- Admin Views ---
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    # 1. Basic Stats
+    # 1. Grab native Django context 
+    # (Because of our global fix in admin.py, this will now AUTOMATICALLY include CSR Operations!)
+    context = admin.site.each_context(request)
+    app_list = admin.site.get_app_list(request)
+            
+    context['available_apps'] = app_list
+    
+    # 2. Add our custom stats
     total_users = User.objects.count()
     total_events = NGO.objects.count()
     
-    # 2. Active Events Count (Business Logic: Not full & Not expired)
     active_events_count = NGO.objects.annotate(
         booked_count=Count('registration')
     ).filter(
@@ -50,17 +53,18 @@ def admin_dashboard(request):
         cutoff_date__gt=timezone.now()
     ).count()
 
-    # 3. Fetch Recent/Upcoming Events (For the Table)
     upcoming_events = NGO.objects.filter(
         event_date__gte=timezone.now()
     ).order_by('event_date')[:5]
 
-    context = {
+    # 3. Merge them together
+    context.update({
         'total_users': total_users,
         'total_events': total_events,
         'active_events': active_events_count,
         'upcoming_events': upcoming_events,
-    }
+    })
+    
     return render(request, 'service_dashboard/admin_dashboard.html', context)
 
 @login_required
@@ -80,12 +84,6 @@ def view_ticket(request, event_id):
         'user': request.user
     }
     return render(request, 'service_dashboard/ticket.html', context)
-
-
-# ==============================================================================
-#  NEW SERVICE LAYER INTEGRATION (Topic 2.2 & 2.4)
-#  These views delegate all logic to services.py instead of doing it themselves.
-# ==============================================================================
 
 @login_required
 def register_event(request, ngo_id):
@@ -112,4 +110,19 @@ def cancel_registration(request, ngo_id):
             messages.error(request, message)
             
     return redirect('dashboard')
+
+@login_required
+def smart_login_redirect(request):
+    """
+    Acts as a traffic cop after login.
+    Admins go to the custom dashboard, regular employees go to the homepage.
+    """
+    if request.user.is_superuser or request.user.is_staff:
+        # Send admins to our custom hijacked /admin/ URL
+        return redirect('/admin/')
+    else:
+        # Send normal employees to the event browsing page
+        return redirect('/')
+
+
 
