@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib import messages
-from service_dashboard.models import NGO # Import your events
+from django.contrib import messages, admin  # <-- ADDED 'admin' here
+from service_dashboard.models import NGO 
 from .models import Notification
 from django.contrib.auth.models import User
 
@@ -18,6 +18,11 @@ def admin_notification_panel(request):
     2. Admin broadcasts messages.
     """
     events = NGO.objects.all()
+
+    # --- NEW: Grab the custom AuraIT branding ---
+    context = admin.site.each_context(request)
+    context['events'] = events  # Keep your dropdown events working!
+    # --------------------------------------------
 
     if request.method == 'POST':
         # --- Functionality: Broadcast Messages ---
@@ -50,7 +55,8 @@ def admin_notification_panel(request):
             
         return redirect('notifications:admin_panel')
 
-    return render(request, 'notifications/admin_panel.html', {'events': events})
+    # --- CHANGED: Pass the combined context to the HTML ---
+    return render(request, 'notifications/admin_panel.html', context)
 
 @login_required
 def user_notifications(request):

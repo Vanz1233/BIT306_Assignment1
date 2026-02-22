@@ -3,66 +3,101 @@
 {% block extrastyle %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        #content {
-            padding: 20px !important;
-            background-color: #f4f6f9;
-        }
-        .card {
-            border-radius: 8px;
-            border: none;
-        }
-        /* Make the fake camera box look nice */
-        .camera-box {
+        #content { padding: 20px !important; background-color: #f4f6f9; }
+        .card { border-radius: 12px; border: none; }
+        
+        /* The Camera Viewfinder Container */
+        .scanner-window {
             width: 100%;
-            height: 300px;
-            background-color: #e9ecef;
-            border: 2px dashed #adb5bd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            max-width: 350px;
+            height: 350px;
+            background-color: #1a1a1a;
+            border-radius: 16px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 10px 20px rgba(0,0,0,0.1);
         }
+        
+        /* The Pulsing Green Laser Animation */
+        .laser {
+            width: 100%;
+            height: 3px;
+            background-color: #00ff00;
+            position: absolute;
+            top: 0;
+            box-shadow: 0 0 15px 3px #00ff00;
+            animation: scan 2.5s infinite linear alternate;
+        }
+        @keyframes scan {
+            0% { top: 5%; }
+            100% { top: 95%; }
+        }
+        
+        /* Camera Focus Brackets */
+        .bracket {
+            position: absolute;
+            width: 50px; height: 50px;
+            border-color: rgba(255,255,255,0.6);
+            border-style: solid;
+        }
+        .tl { top: 30px; left: 30px; border-width: 4px 0 0 4px; border-top-left-radius: 8px; }
+        .tr { top: 30px; right: 30px; border-width: 4px 4px 0 0; border-top-right-radius: 8px; }
+        .bl { bottom: 30px; left: 30px; border-width: 0 0 4px 4px; border-bottom-left-radius: 8px; }
+        .br { bottom: 30px; right: 30px; border-width: 0 4px 4px 0; border-bottom-right-radius: 8px; }
     </style>
 {% endblock %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
         <a href="{% url 'custom_admin_index' %}">Home</a>
-        &rsaquo; Scan Ticket
+        &rsaquo; Ticket Scanner
     </div>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-2">
-    
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2 fw-bold text-dark">📸 Scan Ticket (Prototype)</h1>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+        <h1 class="h2 fw-bold text-dark">📸 Event Check-in Scanner</h1>
     </div>
 
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-6">
-            <div class="card shadow border-0">
-                <div class="card-body p-5 text-center">
-                    
-                    <h4 class="mb-4">Hold QR Code up to Camera</h4>
-                    
-                    <div class="camera-box">
-                        <span class="text-muted fs-4">📷 Camera Active...</span>
-                    </div>
-                    
-                    <p class="text-muted mb-4">
-                        Scanning will automatically verify the employee's registration in the database.
-                    </p>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show shadow-sm text-center fw-bold">
+                ✅ {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
-                    <button class="btn btn-success btn-lg w-100" onclick="alert('Simulated: Employee verified successfully!')">
-                        Simulate Scan
-                    </button>
-                    
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm p-5 text-center bg-white">
+                <h4 class="mb-2 fw-bold text-dark">QR Code Scanner</h4>
+                <p class="text-muted small mb-4">Point the device camera at the attendee's digital QR pass to verify and check them in.</p>
+                
+                <div class="scanner-window mb-5">
+                    <div class="bracket tl"></div>
+                    <div class="bracket tr"></div>
+                    <div class="bracket bl"></div>
+                    <div class="bracket br"></div>
+                    <div class="laser"></div>
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <span class="text-white-50 small text-uppercase" style="letter-spacing: 2px;">Camera Active</span>
+                    </div>
                 </div>
+
+                <div class="border-top pt-4 mt-2">
+                    <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem;">Prototype Testing Controls</h6>
+                    <form method="POST" class="d-flex gap-2 justify-content-center">
+                        {% csrf_token %}
+                        <input type="text" name="attendee_name" class="form-control w-50 bg-light" placeholder="Type name (e.g. Bob)" required>
+                        <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">Simulate Scan</button>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}

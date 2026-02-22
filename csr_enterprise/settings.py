@@ -167,9 +167,9 @@ JAZZMIN_SETTINGS = {
 }
 
 JAZZMIN_SETTINGS = {
-    "site_title": "CSR Admin",
-    "site_header": "CSR Connect",
-    "site_brand": "CSR Management",
+    "site_title": "AuraIT Admin",
+    "site_header": "AuraIT Connect",
+    "site_brand": "AuraIT Management",
     
     # This injects your custom views into the Jazzmin sidebar
     "custom_links": {

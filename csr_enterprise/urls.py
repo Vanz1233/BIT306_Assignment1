@@ -29,6 +29,6 @@ urlpatterns = [
 ]
 
 # Admin Panel UI Customizations
-admin.site.site_header = "CSR Connect Enterprise"
-admin.site.site_title = "CSR Admin Portal"
-admin.site.index_title = "Welcome to CSR Management"
+admin.site.site_header = "AuraIT Enterprise | CSR Connect"
+admin.site.site_title = "Admin Portal"
+admin.site.index_title = "Welcome to AuraIT's CSR Management"

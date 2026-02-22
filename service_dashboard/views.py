@@ -71,7 +71,18 @@ def admin_dashboard(request):
 @user_passes_test(is_admin)
 def scanner_prototype(request):
     """Admin view to simulate scanning a QR code (Use Case 6)"""
-    return render(request, 'service_dashboard/scanner.html')
+    
+    # 1. Grab the custom AuraIT branding we set in urls.py
+    context = admin.site.each_context(request)
+
+    if request.method == 'POST':
+        # Grab the fake name typed in for the prototype test
+        attendee = request.POST.get('attendee_name')
+        messages.success(request, f"SCAN SUCCESS: {attendee} has been successfully checked in!")
+        return redirect('scanner_prototype') # Or whatever your URL name is
+        
+    # 2. Pass the context to the template so the header updates!
+    return render(request, 'service_dashboard/scanner.html', context)
 
 # --- Employee Ticket View ---
 @login_required
@@ -123,6 +134,7 @@ def smart_login_redirect(request):
     else:
         # Send normal employees to the event browsing page
         return redirect('/')
+
 
 
 
