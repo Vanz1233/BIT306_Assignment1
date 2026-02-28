@@ -31,17 +31,19 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+
+    'jazzmin',
+    'service_dashboard',
+    'events',
+    'accounts',
+    'notifications',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'service_dashboard',
-    'events',
-    'accounts',
-    'notifications',
-    'jazzmin',
+
 ]
 
 MIDDLEWARE = [
@@ -66,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notifications.context_processors.unread_notifications',
             ],
         },
     },
@@ -121,6 +124,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# This tells Django to look in your new global static folder!
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 # Redirect to the homepage (Dashboard) after login
 LOGIN_REDIRECT_URL = 'smart_redirect'
 
@@ -170,28 +178,16 @@ JAZZMIN_SETTINGS = {
     "site_title": "AuraIT Admin",
     "site_header": "AuraIT Connect",
     "site_brand": "AuraIT Management",
-    
-    # This injects your custom views into the Jazzmin sidebar
-    "custom_links": {
-        "service_dashboard": [
-            {
-                "name": "📊 Dashboard Stats", 
-                "url": "admin_dashboard", 
-                "icon": "fas fa-chart-line",
-            },
-            {
-                "name": "📸 Scan Ticket (Beta)", 
-                "url": "scanner_prototype", 
-                "icon": "fas fa-camera",
-            },
-            {
-                "name": "📢 Broadcasts", 
-                "url": "notifications", 
-                "icon": "fas fa-bullhorn",
-            }
-        ]
-    },
-    
-    # Optional: Makes the UI look a bit more modern
+
+    "topmenu_links": [
+        {
+            "name": " Logout", 
+            "url": "admin:logout", 
+            # This makes it look like a nice red Bootstrap button
+            "classes": "btn btn-danger text-white fw-bold", 
+        }
+    ],
+
+    "custom_css": "css/admin_tweaks.css",
     "theme": "litera", 
 }

@@ -60,4 +60,34 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
+<script>
+    function markAsRead(notificationId) {
+        // 1. We define the RESTful endpoint
+        const url = `/notifications/api/${notificationId}/update/`;
+        
+        // 2. We trigger the PATCH request (proving 3.1c!)
+        fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                // Django requires the CSRF token for security (proving Topic 1.1d)
+                'X-CSRFToken': '{{ csrf_token }}' 
+            },
+            // We are sending the partial update data
+            body: JSON.stringify({
+                'is_read': true
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // Visually update the UI (e.g., change the background color or hide the "New" badge)
+                document.getElementById(`notif-${notificationId}`).style.opacity = '0.5';
+                alert("Notification marked as read!");
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
 </html>

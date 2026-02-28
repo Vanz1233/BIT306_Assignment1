@@ -7,6 +7,8 @@ from django.db.models import Count, F
 from django.contrib import messages, admin  
 from .services import EventService   
 from django.urls import reverse
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 
 # --- Helper Check ---
 def is_admin(user):
@@ -109,18 +111,19 @@ def register_event(request, ngo_id):
             
     return redirect('dashboard')
 
+@require_http_methods(["DELETE"]) # <-- This is what fixes the 405 error!
 @login_required
 def cancel_registration(request, ngo_id):
-    if request.method == 'POST':
-        # Delegate to Service Layer
-        success, message = EventService.withdraw_employee(request.user, ngo_id)
-        
-        if success:
-            messages.warning(request, message) # Warning color for withdrawal
-        else:
-            messages.error(request, message)
-            
-    return redirect('dashboard')
+    """
+    Topic 3.1d: Uses proper DELETE HTTP method for cancellations.
+    """
+    # Delegate to Service Layer
+    success, message = EventService.withdraw_employee(request.user, ngo_id)
+    
+    if success:
+        return JsonResponse({"status": "success", "message": message})
+    else:
+        return JsonResponse({"status": "error", "message": message}, status=400)
 
 @login_required
 def smart_login_redirect(request):

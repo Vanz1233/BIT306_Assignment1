@@ -48,3 +48,15 @@ class EventService:
             return True, f"You have withdrawn from {ngo.name}."
         else:
             return False, "You are not registered for this event."
+        
+    @staticmethod
+    def get_ticket_verification(user, ngo_id):
+        """
+        Service layer check to verify if an event exists and if the user is registered.
+        """
+        try:
+            ngo = NGO.objects.get(id=ngo_id)
+            is_registered = Registration.objects.filter(employee=user, ngo=ngo).exists()
+            return ngo, is_registered
+        except NGO.DoesNotExist:
+            return None, False

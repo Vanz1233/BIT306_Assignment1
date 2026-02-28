@@ -26,6 +26,10 @@
             {% if user.is_authenticated %}
                 <a href="{% url 'notifications:user_list' %}" class="btn btn-outline-secondary btn-sm me-3 text-white border-secondary">
                     🔔 Notifications
+
+                    {% if unread_notif_count > 0 %}
+                        <span class="badge bg-danger rounded-pill ms-1">{{ unread_notif_count }}</span>
+                    {% endif %}   
                 </a>
 
                 {% if user.is_staff or user.is_superuser %}

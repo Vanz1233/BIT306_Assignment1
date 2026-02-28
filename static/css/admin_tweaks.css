@@ -1,0 +1,8 @@
+/* Teleport the logout button to the right side */
+.jazzmin-logout-btn {
+    position: fixed !important; 
+    right: 150px !important;     
+    top: 8px !important;       
+    padding: 5px 15px !important; 
+    z-index: 99999 !important;
+}

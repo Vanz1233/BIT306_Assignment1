@@ -9,4 +9,6 @@ urlpatterns = [
     
     # User View (For viewing)
     path('my-alerts/', views.user_notifications, name='user_list'),
+
+    path('api/<int:notification_id>/update/', views.mark_notification_read, name='mark_read'),
 ]
