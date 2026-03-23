@@ -4,7 +4,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.urls import reverse
 from django.utils.html import format_html  # <-- NEW: Needed for the custom delete button
 
-from .models import NGO, Registration
+# UPDATED: Imported Activity
+from .models import NGO, Activity, Registration
 
 # ==========================================
 # CUSTOM USER ADMIN
@@ -45,11 +46,24 @@ admin.site.register(User, CustomUserAdmin)
 
 
 # ==========================================
-# NGO EVENT ADMIN (Use Case 1)
+# NGO ADMIN 
 # ==========================================
 @admin.register(NGO)
 class NGOAdmin(admin.ModelAdmin):
-    list_display = ('name', 'event_date', 'max_employees', 'seats_taken', 'seats_available')
+    # UPDATED: Fields adjusted because event info moved to Activity
+    list_display = ('name', 'location', 'created_at')
+    search_fields = ('name', 'location')
+
+
+# ==========================================
+# ACTIVITY ADMIN (NEW for 5.1)
+# ==========================================
+@admin.register(Activity)
+class ActivityAdmin(admin.ModelAdmin):
+    # This now holds the event date, capacity, and seat tracking
+    list_display = ('service_type', 'ngo', 'event_date', 'max_employees', 'seats_taken', 'seats_available')
+    list_filter = ('event_date', 'ngo')
+    search_fields = ('service_type', 'ngo__name')
 
 
 # ==========================================
@@ -57,11 +71,11 @@ class NGOAdmin(admin.ModelAdmin):
 # ==========================================
 @admin.register(Registration)
 class RegistrationAdmin(admin.ModelAdmin):
-    # Dictates what columns show up in the monitoring table, including our new button
-    list_display = ('employee', 'ngo', 'delete_action')
+    # UPDATED: Changed 'ngo' to 'activity'
+    list_display = ('employee', 'activity', 'delete_action')
     
-    # Adds the clean Search bar (Searching by Employee username and NGO name)
-    search_fields = ('employee__username', 'ngo__name') 
+    # UPDATED: Searching by Employee username and NGO name (via the activity relationship)
+    search_fields = ('employee__username', 'activity__ngo__name', 'activity__service_type') 
     
     # Removes that clunky dropdown filter
     list_filter = () 
