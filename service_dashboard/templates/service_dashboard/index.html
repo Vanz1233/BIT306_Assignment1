@@ -71,7 +71,7 @@
                 <p class="text-muted mb-0">Browse and register for upcoming CSR activities.</p>
             </div>
             <div class="col-auto">
-                <span class="badge bg-primary rounded-pill px-3 py-2">{{ ngos|length }} Activities Found</span>
+                <span class="badge bg-primary rounded-pill px-3 py-2">{{ activities|length }} Activities Found</span>
             </div>
         </div>
         
@@ -97,23 +97,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for ngo in ngos %}
+                        {% for activity in activities %}
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark">{{ ngo.name }}</div>
-                                <div class="text-muted small">{{ ngo.description|truncatewords:15 }}</div>
+                                <div class="fw-bold text-dark">{{ activity.service_type }}</div>
+                                <div class="text-muted small">Hosted by: {{ activity.ngo.name }}</div>
                             </td>
-                            <td>{{ ngo.location }}</td>
+                            <td>{{ activity.ngo.location }}</td>
                             <td>
-                                <div>{{ ngo.event_date }}</div>
+                                <div>{{ activity.event_date }} at {{ activity.start_time }}</div>
                                 <span class="badge bg-light text-danger border border-danger mt-1 cutoff-badge">
-                                    Cutoff: {{ ngo.cutoff_date|date:"M d, H:i" }}
+                                    Cutoff: {{ activity.cutoff_date|date:"M d, H:i" }}
                                 </span>
                             </td>
                             <td>
-                                {% if ngo.seats_available > 0 %}
+                                {% if activity.seats_available > 0 %}
                                     <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill">
-                                        {{ ngo.seats_available }} / {{ ngo.max_employees }}
+                                        {{ activity.seats_available }} / {{ activity.max_employees }}
                                     </span>
                                 {% else %}
                                     <span class="badge bg-secondary">FULL</span>
@@ -121,54 +121,52 @@
                             </td>
                             <td class="text-center">
                                 {% if user.is_authenticated %}
-                                    {% if now > ngo.cutoff_date %}
+                                    {% if now > activity.cutoff_date %}
                                         <button class="btn btn-secondary btn-sm w-100" disabled>Closed</button>
                                     
-                                    {% elif ngo.id in user_registered_ids %}
+                                    {% elif activity.id in user_registered_ids %}
                                         <div class="d-flex gap-1">
-                                            <a href="{% url 'events:ticket' ngo.id %}" class="btn btn-info btn-sm w-50 text-white" title="View QR Ticket">Ticket</a>
+                                            <a href="{% url 'events:view_ticket' activity.id %}" class="btn btn-info btn-sm w-50 text-white" title="View QR Ticket">Ticket</a>
                                             
-                                            <button type="button" class="btn btn-outline-danger btn-sm w-50" data-bs-toggle="modal" data-bs-target="#withdrawModal{{ ngo.id }}">
+                                            <button type="button" class="btn btn-outline-danger btn-sm w-50" data-bs-toggle="modal" data-bs-target="#withdrawModal{{ activity.id }}">
                                                 Withdraw
                                             </button>
                                         </div>
 
-                                        <div class="modal fade" id="withdrawModal{{ ngo.id }}" tabindex="-1" aria-labelledby="withdrawModalLabel{{ ngo.id }}" aria-hidden="true">
+                                        <div class="modal fade" id="withdrawModal{{ activity.id }}" tabindex="-1" aria-labelledby="withdrawModalLabel{{ activity.id }}" aria-hidden="true">
                                           <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content text-start">
                                               <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title fw-bold" id="withdrawModalLabel{{ ngo.id }}">Confirm Withdrawal</h5>
+                                                <h5 class="modal-title fw-bold" id="withdrawModalLabel{{ activity.id }}">Confirm Withdrawal</h5>
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                               </div>
                                               <div class="modal-body">
-                                                <p>Are you sure you want to withdraw from <strong>{{ ngo.name }}</strong>?</p>
+                                                <p>Are you sure you want to withdraw from <strong>{{ activity.service_type }}</strong>?</p>
                                                 <p class="small text-muted mb-0">If you withdraw, your slot will be immediately released and made available to other employees. This action cannot be undone.</p>
                                               </div>
                                               <div class="modal-footer border-0">
                                                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Keep My Slot</button>
-                                                
-                                                <button type="button" class="btn btn-danger btn-sm px-4" data-url="{% url 'events:cancel' ngo.id %}" onclick="cancelRegistration(this.dataset.url)">Yes, Withdraw</button>
-
+                                                <button type="button" class="btn btn-danger btn-sm px-4" data-url="{% url 'events:cancel' activity.id %}" onclick="cancelRegistration(this.dataset.url)">Yes, Withdraw</button>
                                               </div>
                                             </div>
                                           </div>
                                         </div>
-                                    {% elif ngo.seats_available == 0 %}
+                                    {% elif activity.seats_available == 0 %}
                                         <button class="btn btn-light text-muted btn-sm w-100 border" disabled>Waitlist</button>
                                     {% else %}
-                                        <button type="button" class="btn btn-success btn-sm w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#consentModal{{ ngo.id }}">
+                                        <button type="button" class="btn btn-success btn-sm w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#consentModal{{ activity.id }}">
                                             Register
                                         </button>
 
-                                        <div class="modal fade" id="consentModal{{ ngo.id }}" tabindex="-1" aria-labelledby="consentModalLabel{{ ngo.id }}" aria-hidden="true">
+                                        <div class="modal fade" id="consentModal{{ activity.id }}" tabindex="-1" aria-labelledby="consentModalLabel{{ activity.id }}" aria-hidden="true">
                                           <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content text-start">
                                               <div class="modal-header bg-light">
-                                                <h5 class="modal-title fw-bold" id="consentModalLabel{{ ngo.id }}">Terms of Participation</h5>
+                                                <h5 class="modal-title fw-bold" id="consentModalLabel{{ activity.id }}">Terms of Participation</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                               </div>
                                               <div class="modal-body">
-                                                <p>You are requesting to register for <strong>{{ ngo.name }}</strong>.</p>
+                                                <p>You are requesting to register for <strong>{{ activity.service_type }}</strong> at {{ activity.ngo.name }}.</p>
                                                 <p class="small text-muted mb-2">By proceeding with this registration, you agree to the following:</p>
                                                 <ul class="small text-muted">
                                                     <li>I commit to attending this Service Day activity on the scheduled date.</li>
@@ -178,17 +176,17 @@
                                                 </ul>
                                                 
                                                 <div class="form-check border p-3 rounded bg-light mt-4">
-                                                    <input class="form-check-input" type="checkbox" id="consentCheck{{ ngo.id }}" onchange="document.getElementById('submitBtn{{ ngo.id }}').disabled = !this.checked;">
-                                                    <label class="form-check-label small fw-bold text-dark" for="consentCheck{{ ngo.id }}">
+                                                    <input class="form-check-input" type="checkbox" id="consentCheck{{ activity.id }}" onchange="document.getElementById('submitBtn{{ activity.id }}').disabled = !this.checked;">
+                                                    <label class="form-check-label small fw-bold text-dark" for="consentCheck{{ activity.id }}">
                                                         I have read and agree to the terms of participation.
                                                     </label>
                                                 </div>
                                               </div>
                                               <div class="modal-footer border-0">
                                                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{% url 'events:register' ngo.id %}" method="post" class="m-0">
+                                                <form action="{% url 'events:register' activity.id %}" method="post" class="m-0">
                                                     {% csrf_token %}
-                                                    <button type="submit" class="btn btn-success btn-sm px-4" id="submitBtn{{ ngo.id }}" disabled>Agree & Continue</button>
+                                                    <button type="submit" class="btn btn-success btn-sm px-4" id="submitBtn{{ activity.id }}" disabled>Agree & Continue</button>
                                                 </form>
                                               </div>
                                             </div>

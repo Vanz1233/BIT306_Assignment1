@@ -191,3 +191,21 @@ JAZZMIN_SETTINGS = {
     "custom_css": "css/admin_tweaks.css",
     "theme": "litera", 
 }
+
+# TEMPORARY: Print SQL queries to the terminal to test Task 5.4
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

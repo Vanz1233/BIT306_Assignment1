@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User 
 from django.core.validators import MinValueValidator
 
+# --- NEW: Imported ValidationError for Task 5.3 ---
+from django.core.exceptions import ValidationError
+
 class NGO(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
@@ -31,6 +34,21 @@ class Activity(models.Model):
     
     # NEW: 5.1 Timestamp requirement
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # --- NEW: TASK 5.3 Custom Model & Form Validation ---
+    def clean(self):
+        super().clean()
+        # Rule: Cut-off date cannot be after the event date
+        if self.cutoff_date and self.event_date:
+            # We use .date() to compare the DateTimeField to the DateField
+            if self.cutoff_date.date() > self.event_date:
+                raise ValidationError({
+                    'cutoff_date': 'The cut-off date cannot be set after the actual event date.'
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean() # Forces the clean() method to run before saving to the database
+        super().save(*args, **kwargs)
 
     def seats_taken(self):
         return self.registration_set.count()

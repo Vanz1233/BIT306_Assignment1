@@ -1,11 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect  
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
-
-# UPDATED: Imported the new Activity model
 from .models import NGO, Activity, Registration
 from django.contrib.auth.models import User
-from django.db.models import Count, F
+from django.db.models import Count, F, Sum
 from django.contrib import messages, admin  
 from .services import EventService   
 from django.urls import reverse
@@ -22,16 +20,16 @@ def dashboard(request):
     The main landing page. 
     It aggregates data but doesn't handle the 'heavy lifting' of registration logic.
     """
-    # UPDATED: We now fetch Activities instead of NGOs, since employees register for Activities
-    activities = Activity.objects.all()
+    # --- UPDATED: TASK 5.4.b.i select_related() ---
+    # Fetches the linked NGO in the same query to prevent N+1 performance issues
+    activities = Activity.objects.select_related('ngo').all()
+    
     user_registered_ids = []
     
     if request.user.is_authenticated:
-        # UPDATED: Look for 'activity_id' instead of 'ngo_id'
         user_registered_ids = Registration.objects.filter(employee=request.user).values_list('activity_id', flat=True)
 
     return render(request, 'service_dashboard/index.html', {
-        # UPDATED: Passed 'activities' to the template instead of 'ngos'
         'activities': activities,
         'user_registered_ids': user_registered_ids,
         'now': timezone.now()
@@ -50,10 +48,8 @@ def admin_dashboard(request):
     # 2. Add our custom stats
     total_users = User.objects.count()
     
-    # UPDATED: Count activities instead of NGOs
     total_events = Activity.objects.count() 
     
-    # UPDATED: Query Activity instead of NGO. This fixes your 500 Server Error!
     active_events_count = Activity.objects.annotate(
         booked_count=Count('registration')
     ).filter(
@@ -61,10 +57,17 @@ def admin_dashboard(request):
         cutoff_date__gt=timezone.now()
     ).count()
 
-    # UPDATED: Query Activity because event_date moved here
-    upcoming_events = Activity.objects.filter(
+    # --- UPDATED: TASK 5.4.b select_related() AND prefetch_related() ---
+    upcoming_events = Activity.objects.select_related('ngo').prefetch_related(
+        'registration_set'
+    ).filter(
         event_date__gte=timezone.now()
     ).order_by('event_date')[:5]
+
+    # --- NEW: TASK 5.2 .aggregate() DEMONSTRATION ---
+    # Calculates the total number of volunteer slots across all activities
+    capacity_data = Activity.objects.aggregate(total_slots=Sum('max_employees'))
+    total_capacity = capacity_data['total_slots'] or 0
 
     # 3. Merge them together
     context.update({
@@ -72,6 +75,7 @@ def admin_dashboard(request):
         'total_events': total_events,
         'active_events': active_events_count,
         'upcoming_events': upcoming_events,
+        'total_capacity': total_capacity,
     })
     
     return render(request, 'service_dashboard/admin_dashboard.html', context)
@@ -88,12 +92,10 @@ def scanner_prototype(request):
         return redirect('scanner_prototype') 
         
     return render(request, 'service_dashboard/scanner.html', context)
-
 # --- Employee Ticket View ---
 @login_required
 def view_ticket(request, event_id):
     """Employee view to see their own QR code ticket (Use Case 6)"""
-    # UPDATED: Fetch from Activity instead of NGO
     event = get_object_or_404(Activity, id=event_id)
     
     context = {
@@ -103,7 +105,6 @@ def view_ticket(request, event_id):
     return render(request, 'service_dashboard/ticket.html', context)
 
 @login_required
-# UPDATED: Changed ngo_id to activity_id
 def register_event(request, activity_id):
     if request.method == 'POST':
         # Delegate to Service Layer
@@ -118,7 +119,6 @@ def register_event(request, activity_id):
 
 @require_http_methods(["DELETE"])
 @login_required
-# UPDATED: Changed ngo_id to activity_id
 def cancel_registration(request, activity_id):
     """
     Topic 3.1d: Uses proper DELETE HTTP method for cancellations.
