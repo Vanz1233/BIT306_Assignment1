@@ -11,7 +11,7 @@ class EventService:
     """
 
     @staticmethod
-    # UPDATED: Changed ngo_id to activity_id
+    # UPDATED: Changed ngo_id to activity_id and added user parameter for registration checks 
     def register_employee(user, activity_id):
         try:
             # Topic 4.5: Start the Atomic Transaction 
